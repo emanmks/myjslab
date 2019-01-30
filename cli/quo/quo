@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+
+const axios = require('axios')
+const chalk = require('chalk')
+
+const url = "https://quotes.rest/qod"
+
+console.log('quote of today:')
+
+axios({
+    method: 'get',
+    url: url,
+    headers: { 'Accept': 'application/json' },
+}).then(res => function () {
+    const quote = res.data.contents.quotes.quote
+    const author = res.data.contents.quotes.author
+    const log = chalk.green(`${quote} - ${author}`)
+    console.log(log)
+}).catch(err => function () {
+    const log = chalk.red(err)
+    console.log(err)
+})

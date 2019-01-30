@@ -1,0 +1,142 @@
+#!/usr/bin/env node
+
+// Basic dependencies
+const chalk = require('chalk')
+const args = process.argv
+// End of basic dependencies
+
+
+// Data operation dependencies
+const rl = require('readline')
+const low = require('lowdb')
+const FileSync = require('lowdb/adapters/FileSync')
+
+const fileName = ''
+const adapter = new FileSync('db.json')
+const db = low(adapter)
+
+db.defaults({ todos: [] }).write()
+// End of data operation
+
+
+const helpText = 
+`A todo app for terminal lover
+
+usage:
+    todo <command>
+
+    available actions:
+    new:              to create a new todo
+    get:              to retrieve your todos
+    complete <index>: to mark a todo as complete
+    help:             to print the usage guide`
+
+const commands = ['new', 'get', 'complete', 'help']
+
+const help = function () {
+    console.log(helpText)
+}
+
+const showError = function (err) {
+    errorMessage = chalk.red('Error: ' + err)
+    console.log(errorMessage)
+}
+
+if (args.length > 3 && args[2] != 'complete') {
+    showError('only one argument can be accepted')
+    help()
+    return
+}
+
+if (commands.indexOf(args[2]) == -1) {
+    showError('Invalid action')
+    help()
+    return
+}
+
+switch(args[2]) {
+    case 'help':
+        help()
+        break
+    case 'new':
+        newToDo()
+        break
+    case 'get':
+        getTodos()
+        break
+    case 'complete':
+        completeTodo()
+        getTodos()
+        break;
+    default:
+        help()
+}
+
+function prompt(question) {
+    const r = rl.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        terminal: false
+    })
+
+    return new Promise((resolve, error) => {
+        r.question(question, answer => {
+            r.close()
+            resolve(answer)
+        })
+    })
+}
+
+function newToDo() {
+    const q = chalk.blue("Please type in your new todo: \n")
+    prompt(q).then(todo => {
+        db.get('todos')
+        .push({
+            title: todo,
+            complete: false
+        })
+        .write()
+        getTodos()
+    })
+}
+
+function getTodos() {
+    todos = db.get('todos').value()
+    let index = 1
+
+    todos.forEach(todo => {
+        let todoString = `[${index++}]-${todo.title} `
+        if (todo.complete) {
+            todoString += ' ✔ ️'
+            console.log(chalk.green(todoString))
+         } else {
+            console.log(chalk.blue(todoString))
+         }
+    })
+}
+
+function completeTodo() {
+    // user must pass an index of todo
+    // only one todo to complete at one time
+    if (args.length != 4) {
+        showError('Error: Invalid argument. Please pass the index')
+        help()
+        return
+    }
+
+    let n = args[3]
+    if (isNaN(n)) {
+        showError('Error: invalid index. Please pass a valid index number')
+        help()
+        return
+    }
+
+    let todosLength = db.get('todos').value().length
+    if (n > todosLength) {
+        showError('Error: Invalid index. It is exceed the max available index')
+        help()
+        return
+    }
+
+    db.set(`todos[${n-1}].complete`, true).write()
+}

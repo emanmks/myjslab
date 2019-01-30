@@ -1,0 +1,20 @@
+{
+  "todos": [
+    {
+      "title": "learn nodejs",
+      "complete": true
+    },
+    {
+      "title": "learn nodejs microframework",
+      "complete": false
+    },
+    {
+      "title": "learn nodejs cli app",
+      "complete": true
+    },
+    {
+      "title": "insert wrong task",
+      "complete": false
+    }
+  ]
+}
